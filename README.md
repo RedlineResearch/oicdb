@@ -4,7 +4,6 @@ oicdb
 ## Omniscient Interrogative C Debugger
 
 Run:
-<<<<<<< HEAD
 
 ```
 $ ./pass.py c_files/tree.c > c_out/tree.c
