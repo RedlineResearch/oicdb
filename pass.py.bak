@@ -1,0 +1,53 @@
+
+  """
+  
+  ps = lambda x: ()
+
+  # Builds a list of 2 Nodes representing the 2 Nodes that should replace
+  # the Assignment node wherever it is located:
+  def debug_assig(a):
+    print (a.lvalue.__dict__)
+    ID = var_ID(a.lvalue.name)
+    var = var_var()
+
+  dbn = {
+    ArrayDecl: ps,
+    ArrayRef: ps,
+    # debug LHS & RHS
+    Assignment: lambda a: (db(a.lvalue), db(a.rvalue), debug_assig(a)),
+    BinaryOp: lambda bo: (db(bo.left), db(bo.right), debug_binop(bo)),
+    Break: ps,
+    Case: ps,
+    Cast: ps,
+    Compound: ps,
+    CompoundLiteral: ps,
+    Constant: ps,
+    Continue: ps,
+    Decl: ps,
+    DeclList: ps,
+    Default: ps,
+    DoWhile: ps,
+    EllipsisParam: ps,
+    EmptyStatement: ps,
+    Enum: ps,
+    Enumerator: ps,
+    EnumeratorList: ps,
+    ExprList: ps,
+    FileAST: ps,
+    For: ps,
+    FuncCall: ps,
+    FuncDecl: ps,
+    FuncDef: ps,
+    Goto: ps,
+    ID: ps,
+    IdentifierType: ps,
+    If: ps,
+    InitList: ps,
+    Label: ps,
+    NamedInitializer: ps,
+    ParamList: ps,
+    PtrDecl: ps,
+    Return: ps,
+    Struct: ps,
+    """
+
