@@ -22,3 +22,11 @@ $ ./a.out debug_fifo
 
 And you will see the binary trace print on the screen of the first terminal.
 
+# TODO:
+1.    Finish "entering" and "exiting" function trace information.
+2.    Handle "#include" / "typedef" lines more robustly.
+3.    Handle Compound statements without using a fake FuncCall.
+4.    Save symbol table to file for use by trace listener.
+5.    Make a trace listener (read in a pickle file with symbol table / dict
+      and convert binary trace to human-readable format).
+
