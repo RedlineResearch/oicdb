@@ -22,7 +22,7 @@ $ ./a.out debug_fifo
 
 And you will see the binary trace print on the screen of the first terminal.
 
-# TODO:
+### TODO:
 1.    Finish "entering" and "exiting" function trace information.
 2.    Handle "#include" / "typedef" lines more robustly.
 3.    Handle Compound statements without using a fake FuncCall.
