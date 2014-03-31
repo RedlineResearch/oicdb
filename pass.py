@@ -2,6 +2,7 @@
 import pycparser
 from pycparser import parse_file, c_generator
 from pycparser.c_ast import *
+import ast_ops
 import sys
 import pickle
 import copy
@@ -30,13 +31,28 @@ def setup_pass(ast):
     result.append(c)
   ast.ext = result
   #print ast.ext
+  
+# Updates the symbol table to include the new unique key. Return the new
+# ID_count so the caller knows the ID for the new symbol / assignment.
+def new_sym(unique_key):
+  global ID_count, sym_table
+  ID_count = ID_count + 1
+  sym_table[unique_key] = ID_count
+  return ID_count
+
 
 fncn_rubric = pickle.loads(open("rubrics/fncn.pkl", 'r').read())
-def fncn_pass(ast):
+def fncn_pass(ast, filename=""):
   """ Insert 'entering' and 'exiting' fncn expressions """
   rubric = fncn_rubric
-  fncn_in = rubric.block_items[0]
-  fncn_out = rubric.block_items[1]
+  fncn_in = rubric.block_items[1]
+  fncn_out = rubric.block_items[2]
+  
+  def var_declare(name):
+    decl = copy.deepcopy(rubric.block_items[0])
+    decl.init.value = str(ID_count)
+    decl.type.declname = name
+    return decl
   
   # TODO: Find all return statements and convert them into Compounds
   # containing "write('Exiting fncn')" + the return statement. Leave the
@@ -47,21 +63,21 @@ def fncn_pass(ast):
     # Find all function definitions:
     if isinstance(c, pycparser.c_ast.FuncDef):
       # Append "entering" and "exiting" printfs to block items list:
-      c.body.block_items = [fncn_in] + c.body.block_items + [fncn_out]
+      unique_ID = new_sym((filename,c.coord,c.decl.name))
+      name = "__DEBUG_"+str(ID_count)
+      decl = var_declare(name)
+      fncn_in.args.exprs[1].name = name
+      fncn_in.args.exprs[2].expr.name = name
+      fncn_out.args.exprs[1].name = name
+      fncn_out.args.exprs[2].expr.name = name
+      c.body.block_items = [decl,fncn_in] + c.body.block_items + [fncn_out]
+      ast_ops.sar(c, pycparser.c_ast.Return, lambda r: Compound([fncn_out,r],coord=r.coord))
 
 var_rubric = pickle.loads(open("rubrics/var.pkl", 'r').read())
 def var_pass(ast, filename=""):
   """ Insert assignment to variable logging expressions """
   rubric = var_rubric
   
-  # Updates the symbol table to include the new unique key. Return the new
-  # ID_count so the caller knows the ID for the new symbol / assignment.
-  def new_sym(unique_key):
-    global ID_count, sym_table
-    ID_count = ID_count + 1
-    sym_table[unique_key] = ID_count
-    return ID_count
-
   # Create AST for variable declaration:
   def var_declare(name):
     decl = copy.deepcopy(rubric.block_items[0])
@@ -130,7 +146,7 @@ if __name__ == '__main__':
   ast = get_ast(sys.argv[1])
   sym_table[sys.argv[1]] = dict()
   var_pass(ast, filename=sys.argv[1]) # do VAR pass first (don't want to VAR the setup...)
-  fncn_pass(ast) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
+  fncn_pass(ast, filename=sys.argv[1]) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
   setup_pass(ast) # do SETUP pass last
   # TODO: get rid of this hacky line:
   print (subprocess.check_output("cat %s | egrep '^#include'"%(sys.argv[1],), shell=True)).rstrip()
