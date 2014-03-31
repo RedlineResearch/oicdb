@@ -54,11 +54,6 @@ def fncn_pass(ast, filename=""):
     decl.type.declname = name
     return decl
   
-  # TODO: Find all return statements and convert them into Compounds
-  # containing "write('Exiting fncn')" + the return statement. Leave the
-  # below code as is in case there isn't a return statement at the end of a
-  # void function.
-  
   for c in ast.ext:
     # Find all function definitions:
     if isinstance(c, pycparser.c_ast.FuncDef):
@@ -85,50 +80,14 @@ def var_pass(ast, filename=""):
   def var_ID(name,n):
     ID = copy.deepcopy(rubric.block_items[1])
     unique_ID = "__DEBUG_"+str(new_sym((filename,n.coord,n.lvalue.name)))
-    ID.args.exprs[2].expr.name = str(unique_ID)
-    #print ID.args.exprs[1].__dict__
-    ID.args.exprs[1].expr.name = str(unique_ID)
+    ast_ops.sar(ID, str, lambda s: unique_ID if s == "__DEBUG_ID" else s)
     return ID
   # Create AST for writing the variable var to debug FIFO
   def var_var(name):
     var = copy.deepcopy(rubric.block_items[2])
-    var.args.exprs[2].expr.name = name
-    var.args.exprs[1].expr.name = name
+    ast_ops.sar(var, str, lambda s: name if s == "var" else s)
     return var
   
-  def dbn(n):
-    # If we have a list - recursive map onto the list:
-    if isinstance(n, list):
-      return map(dbn, n) # Compound block_items
-    #if hasattr(n, "__dict__"): # debugging...
-    #  print n.__dict__
-    # If we don't have a Node (likely str, int, etc...) then leave it be:
-    if not isinstance(n, Node): return n
-    # Recursively map onto all the __dict__ values in the Node object:
-    for key in n.__dict__.keys(): #n.children():
-      c = n.__dict__[key]
-      ret = dbn(c)
-      if not (ret == n.__dict__[key]):
-        #print "Replacing "+str(n.__dict__[key])+" with "+str(ret)
-        n.__dict__[key] = ret
-    # If we have an Assignment node, replace it accordingly
-    if isinstance(n, Assignment): # Convert Assignment into Compound (write + assig)
-      ID = var_ID(n.lvalue.name,n)
-      var = var_var(n.lvalue.name)
-      decl = var_declare("__DEBUG_"+str(ID_count))
-      #print ID.__dict__
-      # TODO: Figure out how to make this Compound parenthesized without using a FuncCall...
-      return FuncCall(pycparser.c_ast.ID(""), \
-                      ExprList([Compound([decl,ID,n,var,n.lvalue],coord=n.coord)]))
-    # Not an Assignment, so just leave it be:
-    return n
-
-  # TODO: Change e.g. "3" to "__DEBUG_3" and add "int __DEBUG_3" declarations
-  # in local scope? (global scope? local is probably easier...) Also, fix / add
-  # "#includes" at top of file / in global scope
-  
-  #dbn(ast.ext)
-
   def dbg(a):
     ID = var_ID(a.lvalue.name, a)
     var = var_var(a.lvalue.name)
@@ -146,12 +105,16 @@ def to_c(ast):
 
 if __name__ == '__main__':
 
-  if len(sys.argv) != 2:
-    print ("Usage: %s [file.c]"%sys.argv[0])
+  if len(sys.argv) < 2:
+    print ("Usage: %s file.c [sym_table.pkl]"%sys.argv[0])
     exit()
 
-  ast = get_ast(sys.argv[1])
-  sym_table[sys.argv[1]] = dict()
+  fn = sys.argv[1]
+  sym_table_fn = fn + ".sym.pkl"
+  if len(sys.argv) > 2: sym_table_fn = sys.argv[2] + ".sym.pkl"
+
+  ast = get_ast(fn)
+  sym_table[fn] = dict()
   var_pass(ast, filename=sys.argv[1]) # do VAR pass first (don't want to VAR the setup...)
   fncn_pass(ast, filename=sys.argv[1]) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
   setup_pass(ast) # do SETUP pass last
@@ -160,5 +123,5 @@ if __name__ == '__main__':
   print "#include <fcntl.h>"
   print "int __DEBUG_FIFO;"
   print (to_c(ast))
-
+  pickle.dump(sym_table, open(sym_table_fn, 'w'))
 
