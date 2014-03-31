@@ -45,8 +45,6 @@ fncn_rubric = pickle.loads(open("rubrics/fncn.pkl", 'r').read())
 def fncn_pass(ast, filename=""):
   """ Insert 'entering' and 'exiting' fncn expressions """
   rubric = fncn_rubric
-  fncn_in = rubric.block_items[1]
-  fncn_out = rubric.block_items[2]
   
   def var_declare(name):
     decl = copy.deepcopy(rubric.block_items[0])
@@ -58,10 +56,13 @@ def fncn_pass(ast, filename=""):
     # Find all function definitions:
     if isinstance(c, pycparser.c_ast.FuncDef):
       # Append "entering" and "exiting" printfs to block items list:
+      rubric_loc = copy.deepcopy(rubric)
       unique_ID = new_sym((filename,c.coord,c.decl.name))
       name = "__DEBUG_"+str(ID_count)
       decl = var_declare(name)
-      ast_ops.sar(rubric, str, lambda s: name if s == "__DEBUG_ID" else s)
+      ast_ops.sar(rubric_loc, str, lambda s: name if s == "__DEBUG_ID" else s)
+      fncn_in = rubric_loc.block_items[1]
+      fncn_out = rubric_loc.block_items[2]
       c.body.block_items = [decl,fncn_in] + c.body.block_items + [fncn_out]
       ast_ops.sar(c, pycparser.c_ast.Return, lambda r: Compound([fncn_out,r],coord=r.coord))
 
@@ -119,6 +120,7 @@ if __name__ == '__main__':
   setup_pass(ast) # do SETUP pass last
   # TODO: get rid of this hacky line:
   print (subprocess.check_output("cat %s | egrep '^#include'"%(sys.argv[1],), shell=True)).rstrip()
+  print "#include <unistd.h>"
   print "#include <fcntl.h>"
   print "int __DEBUG_FIFO;"
   print (to_c(ast))
