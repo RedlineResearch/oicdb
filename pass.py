@@ -66,10 +66,7 @@ def fncn_pass(ast, filename=""):
       unique_ID = new_sym((filename,c.coord,c.decl.name))
       name = "__DEBUG_"+str(ID_count)
       decl = var_declare(name)
-      fncn_in.args.exprs[1].name = name
-      fncn_in.args.exprs[2].expr.name = name
-      fncn_out.args.exprs[1].name = name
-      fncn_out.args.exprs[2].expr.name = name
+      ast_ops.sar(rubric, str, lambda s: name if s == "__DEBUG_ID" else s)
       c.body.block_items = [decl,fncn_in] + c.body.block_items + [fncn_out]
       ast_ops.sar(c, pycparser.c_ast.Return, lambda r: Compound([fncn_out,r],coord=r.coord))
 
@@ -130,7 +127,17 @@ def var_pass(ast, filename=""):
   # in local scope? (global scope? local is probably easier...) Also, fix / add
   # "#includes" at top of file / in global scope
   
-  dbn(ast.ext)
+  #dbn(ast.ext)
+
+  def dbg(a):
+    ID = var_ID(a.lvalue.name, a)
+    var = var_var(a.lvalue.name)
+    decl = var_declare("__DEBUG_"+str(ID_count))
+    a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg) # let's recurse some more
+    cmpd = Compound([decl,ID,a,var,a.lvalue], coord=a.coord)
+    return FuncCall(pycparser.c_ast.ID(""), ExprList([cmpd]))
+  ast_ops.sar(ast, Assignment, dbg)
+
 
 
 def to_c(ast):
