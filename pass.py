@@ -52,19 +52,46 @@ def fncn_pass(ast, filename=""):
     decl.type.declname = name
     return decl
   
-  for c in ast.ext:
-    # Find all function definitions:
-    if isinstance(c, pycparser.c_ast.FuncDef):
-      # Append "entering" and "exiting" printfs to block items list:
-      rubric_loc = copy.deepcopy(rubric)
-      unique_ID = new_sym((filename,c.coord,c.decl.name))
-      name = "__DEBUG_"+str(ID_count)
-      decl = var_declare(name)
-      ast_ops.sar(rubric_loc, str, lambda s: name if s == "__DEBUG_ID" else s)
-      fncn_in = rubric_loc.block_items[1]
-      fncn_out = rubric_loc.block_items[2]
-      c.body.block_items = [decl,fncn_in] + c.body.block_items + [fncn_out]
-      ast_ops.sar(c, pycparser.c_ast.Return, lambda r: Compound([fncn_out,r],coord=r.coord))
+  # Find and debug entrance and void exit of all function definitions:
+  def dbg(c):
+    rubric_loc = copy.deepcopy(rubric)
+    unique_ID = new_sym((filename,c.coord,c.decl.name,type(c)))
+    name = "__DEBUG_"+str(ID_count)
+    decl = var_declare(name)
+    ast_ops.sar(rubric_loc, str, lambda s: name if s == "__DEBUG_ID" else s)
+    fncn_in = rubric_loc.block_items[1]
+    fncn_out = rubric_loc.block_items[2]
+    c.body.block_items = [decl,fncn_in] + c.body.block_items + [fncn_out]
+    return c
+  ast_ops.sar(ast, pycparser.c_ast.FuncDef, dbg)
+
+return_rubric = pickle.loads(open("rubrics/return.pkl", 'r').read())
+def return_pass(ast, filename=""):
+  """ Insert 'exiting' fncn expressions at return statements """
+  rubric = return_rubric
+  
+  def var_declare(name, num):
+    decl = copy.deepcopy(rubric.block_items[num])
+    decl.init.value = str(ID_count)
+    decl.type.declname = name
+    return decl
+  
+  # Find and debug all return statements:
+  def dbg(ret):
+    rubric_loc = copy.deepcopy(rubric)
+    unique_ID = new_sym((filename,ret.coord,"return",type(ret)))
+    name = "__DEBUG_"+str(ID_count)
+    decl = var_declare(name, 0)
+    ast_ops.sar(rubric_loc, str, lambda s: name if s == "__DEBUG_ID" else s)
+    fncn_out = rubric_loc.block_items[2]
+    decl2 = var_declare("__DEBUG_RETURN", 1)
+    decl2.init = ret.expr
+    ret.expr = pycparser.c_ast.ID("__DEBUG_RETURN")
+    fncn_ret = rubric_loc.block_items[5]
+    return Compound([decl,decl2,fncn_out,rubric_loc.block_items[3],\
+                     rubric_loc.block_items[4],fncn_ret,ret],coord=ret.coord)
+  ast_ops.sar(ast, pycparser.c_ast.Return, dbg)
+
 
 var_rubric = pickle.loads(open("rubrics/var.pkl", 'r').read())
 def var_pass(ast, filename=""):
@@ -80,7 +107,7 @@ def var_pass(ast, filename=""):
   # Create AST for writing the variable ID to debug FIFO
   def var_ID(name,n):
     ID = copy.deepcopy(rubric.block_items[1])
-    unique_ID = "__DEBUG_"+str(new_sym((filename,n.coord,n.lvalue.name)))
+    unique_ID = "__DEBUG_"+str(new_sym((filename,n.coord,n.lvalue.name,type(n))))
     ast_ops.sar(ID, str, lambda s: unique_ID if s == "__DEBUG_ID" else s)
     return ID
   # Create AST for writing the variable var to debug FIFO
@@ -117,6 +144,7 @@ if __name__ == '__main__':
   ast = get_ast(fn)
   var_pass(ast, filename=sys.argv[1]) # do VAR pass first (don't want to VAR the setup...)
   fncn_pass(ast, filename=sys.argv[1]) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
+  return_pass(ast, filename=sys.argv[1]) # return pass 3rd?
   setup_pass(ast) # do SETUP pass last
   # TODO: get rid of this hacky line:
   print (subprocess.check_output("cat %s | egrep '^#include'"%(sys.argv[1],), shell=True)).rstrip()

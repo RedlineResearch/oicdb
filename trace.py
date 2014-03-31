@@ -16,14 +16,19 @@ sym_table = pickle.load(open(sys.argv[1], 'r'))
 fifo = open(sys.argv[2], 'r')
 
 while True:
-  data = fifo.read(8)
+  data = fifo.read(4)
   if len(data) == 0:
     fifo.close()
     print "Re-opening fifo..."
     fifo = open(sys.argv[2], 'r')
     continue
-  ID,val = struct.unpack("@ii",data)
-  fn,coord,var = sym_table[ID]
-  print "%04d] %s:%d: %s = %d"%(ID,fn,coord.line,var,val)
+  ID, = struct.unpack("@i",data)
+  fn,coord,var,cls = sym_table[ID]
+  if cls == pycparser.c_ast.Assignment: val = struct.unpack("@i", fifo.read(4))[0]
+  elif cls == pycparser.c_ast.FuncDef:  val = "function"
+  elif cls == pycparser.c_ast.Return:
+    length = struct.unpack("@i", fifo.read(4))[0]
+    val = struct.unpack("@i", fifo.read(length))[0]
+  print "%04d] %s:%d: %s = %s"%(ID,fn,coord.line,var,str(val))
 
 
