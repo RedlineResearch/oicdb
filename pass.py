@@ -37,7 +37,7 @@ def setup_pass(ast):
 def new_sym(unique_key):
   global ID_count, sym_table
   ID_count = ID_count + 1
-  sym_table[unique_key] = ID_count
+  sym_table[ID_count] = unique_key
   return ID_count
 
 
@@ -93,7 +93,7 @@ def var_pass(ast, filename=""):
     var = var_var(a.lvalue.name)
     decl = var_declare("__DEBUG_"+str(ID_count))
     a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg) # let's recurse some more
-    cmpd = Compound([decl,ID,a,var,a.lvalue], coord=a.coord)
+    cmpd = Compound([decl,a,ID,var,a.lvalue], coord=a.coord)
     return FuncCall(pycparser.c_ast.ID(""), ExprList([cmpd]))
   ast_ops.sar(ast, Assignment, dbg)
 
@@ -114,7 +114,6 @@ if __name__ == '__main__':
   if len(sys.argv) > 2: sym_table_fn = sys.argv[2] + ".sym.pkl"
 
   ast = get_ast(fn)
-  sym_table[fn] = dict()
   var_pass(ast, filename=sys.argv[1]) # do VAR pass first (don't want to VAR the setup...)
   fncn_pass(ast, filename=sys.argv[1]) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
   setup_pass(ast) # do SETUP pass last
