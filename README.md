@@ -42,3 +42,6 @@ And you will see the binary trace print on the screen of the first terminal.
 6.    Make a trace listener which handles data types other than int.
 7.    Figure out why trace of function calls is not working.
 
+ArrayDecl, Assignment, BinaryOp, Decl, DeclList,
+PtrDecl, Return, UnaryOp
+

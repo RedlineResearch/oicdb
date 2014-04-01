@@ -24,5 +24,5 @@ def replace_nodes(ast, cls, cb):
   sar(ast, cls, cb)
 
 def sar_string(ast, find, replace):
-  return ast_ops.sar(ast, str, lambda s: replace if s == find else s)
+  return sar(ast, str, lambda s: replace if s == find else s)
 
