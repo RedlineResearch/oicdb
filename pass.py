@@ -38,30 +38,28 @@ def new_sym(unique_key):
   global ID_count, sym_table
   ID_count = ID_count + 1
   sym_table[ID_count] = unique_key
-  return ID_count
+  return "__DEBUG_"+str(ID_count)
 
+def var_declare(name, rubric, num):
+  decl = copy.deepcopy(rubric.block_items[num])
+  decl.init.value = str(ID_count)
+  decl.type.declname = name
+  return decl
 
 fncn_rubric = pickle.loads(open("rubrics/fncn.pkl", 'r').read())
 def fncn_pass(ast, filename=""):
   """ Insert 'entering' and 'exiting' fncn expressions """
   rubric = fncn_rubric
   
-  def var_declare(name):
-    decl = copy.deepcopy(rubric.block_items[0])
-    decl.init.value = str(ID_count)
-    decl.type.declname = name
-    return decl
-  
   # Find and debug entrance and void exit of all function definitions:
   def dbg(c):
     rubric_loc = copy.deepcopy(rubric)
-    unique_ID = new_sym((filename,c.coord,c.decl.name,type(c)))
-    name = "__DEBUG_"+str(ID_count)
-    decl = var_declare(name)
-    ast_ops.sar(rubric_loc, str, lambda s: name if s == "__DEBUG_ID" else s)
-    fncn_in = rubric_loc.block_items[1]
-    fncn_out = rubric_loc.block_items[2]
-    c.body.block_items = [decl,fncn_in] + c.body.block_items + [fncn_out]
+    name = new_sym((filename,c.coord,c.decl.name,type(c)))
+    decl = var_declare(name, rubric_loc, 0)
+    ast_ops.sar_string(rubric_loc, "__DEBUG_ID", name)
+    f_in = rubric_loc.block_items[1]
+    f_out = rubric_loc.block_items[2]
+    c.body.block_items = [decl,f_in] + c.body.block_items + [f_out]
     return c
   ast_ops.sar(ast, pycparser.c_ast.FuncDef, dbg)
 
@@ -70,21 +68,14 @@ def return_pass(ast, filename=""):
   """ Insert 'exiting' fncn expressions at return statements """
   rubric = return_rubric
   
-  def var_declare(name, num):
-    decl = copy.deepcopy(rubric.block_items[num])
-    decl.init.value = str(ID_count)
-    decl.type.declname = name
-    return decl
-  
   # Find and debug all return statements:
   def dbg(ret):
     rubric_loc = copy.deepcopy(rubric)
-    unique_ID = new_sym((filename,ret.coord,"return",type(ret)))
-    name = "__DEBUG_"+str(ID_count)
-    decl = var_declare(name, 0)
-    ast_ops.sar(rubric_loc, str, lambda s: name if s == "__DEBUG_ID" else s)
+    name = new_sym((filename,ret.coord,"return",type(ret)))
+    decl = var_declare(name, rubric_loc, 0)
+    ast_ops.sar_string(rubric_loc, "__DEBUG_ID", name)
     fncn_out = rubric_loc.block_items[2]
-    decl2 = var_declare("__DEBUG_RETURN", 1)
+    decl2 = var_declare("__DEBUG_RETURN", rubric, 1)
     decl2.init = ret.expr
     ret.expr = pycparser.c_ast.ID("__DEBUG_RETURN")
     fncn_ret = rubric_loc.block_items[5]
@@ -121,7 +112,7 @@ def var_pass(ast, filename=""):
     var = var_var(a.lvalue.name)
     decl = var_declare("__DEBUG_"+str(ID_count))
     a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg) # let's recurse some more
-    cmpd = Compound([decl,a,ID,var,a.lvalue], coord=a.coord)
+    cmpd = Compound([decl,decl2,a,ID,var,a.lvalue], coord=a.coord)
     return FuncCall(pycparser.c_ast.ID(""), ExprList([cmpd]))
   ast_ops.sar(ast, Assignment, dbg)
 
@@ -142,9 +133,9 @@ if __name__ == '__main__':
   if len(sys.argv) > 2: sym_table_fn = sys.argv[2] + ".sym.pkl"
 
   ast = get_ast(fn)
-  var_pass(ast, filename=sys.argv[1]) # do VAR pass first (don't want to VAR the setup...)
-  fncn_pass(ast, filename=sys.argv[1]) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
-  return_pass(ast, filename=sys.argv[1]) # return pass 3rd?
+  var_pass(ast, filename=fn) # do VAR pass first (don't want to VAR the setup...)
+  fncn_pass(ast, filename=fn) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
+  return_pass(ast, filename=fn) # return pass 3rd?
   setup_pass(ast) # do SETUP pass last
   # TODO: get rid of this hacky line:
   print (subprocess.check_output("cat %s | egrep '^#include'"%(sys.argv[1],), shell=True)).rstrip()

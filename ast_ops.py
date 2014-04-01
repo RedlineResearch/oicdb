@@ -23,3 +23,6 @@ def replace_nodes(ast, cls, cb):
   instance of a node / object found which is of type cls. """
   sar(ast, cls, cb)
 
+def sar_string(ast, find, replace):
+  return ast_ops.sar(ast, str, lambda s: replace if s == find else s)
+
