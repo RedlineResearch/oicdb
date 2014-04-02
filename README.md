@@ -31,8 +31,6 @@ $ ./tree debug_fifo
 which produces a human-readable trace of the assignments in the program.
 
 
-And you will see the binary trace print on the screen of the first terminal.
-
 ### TODO:
 1.    ~~Finish "entering" and "exiting" function trace information.~~
 2.    Handle "#include" / "typedef" lines more robustly.
