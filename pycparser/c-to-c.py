@@ -37,10 +37,10 @@ int main(void)
     return 0;
 }
 '''
-    parser = c_parser.CParser()
+    parser = ext_c_parser.GnuCParser() #c_parser.CParser()
     ast = parser.parse(src)
     ast.show()
-    generator = c_generator.CGenerator()
+    generator = ext_c_generator.GnuCGenerator() #c_generator.CGenerator()
     
     print(generator.visit(ast))
     

@@ -20,7 +20,6 @@ CPPPATH = '../utils/cpp.exe' if sys.platform == 'win32' else 'cpp'
 
 from pycparser import parse_file
 
-
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         filename  = sys.argv[1]

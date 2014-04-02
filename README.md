@@ -6,7 +6,7 @@ oicdb
 Run:
 
 ```
-$ ./runpass
+$ ./runpass [tree.c | fact.c]
 ```
 
 which runs pass.py on c_files/tree.c saving the output to c_out/tree.c,
@@ -17,7 +17,8 @@ You can then in separate terminals run:
 
 ```
 $ cd c_out
-$ ../trace.py tree.c.sym.pkl debug_fifo
+$ ../trace.py tree.c.sym.pkl debug_fifo # OR the following:
+$ ../trace.py fact.c.sym.pkl debug_fifo
 ```
 
 and
@@ -41,7 +42,4 @@ And you will see the binary trace print on the screen of the first terminal.
       and convert binary trace to human-readable format).~~
 6.    Make a trace listener which handles data types other than int.
 7.    Figure out why trace of function calls is not working.
-
-ArrayDecl, Assignment, BinaryOp, Decl, DeclList,
-PtrDecl, Return, UnaryOp
 

@@ -42,7 +42,10 @@ def new_sym(unique_key):
 
 def var_declare(name, rubric, num):
   decl = copy.deepcopy(rubric.block_items[num])
-  decl.init.value = str(ID_count)
+  try:
+    decl.init.expr.value = str(ID_count)
+  except AttributeError:
+    decl.init.value = str(ID_count)
   decl.type.declname = name
   return decl
 
@@ -88,7 +91,9 @@ var_rubric = pickle.loads(open("rubrics/var.pkl", 'r').read())
 def var_pass(ast, filename=""):
   """ Insert assignment to variable logging expressions """
   rubric = var_rubric
+  ast_ops.fix_typeofs(rubric)
   
+  """
   # Create AST for variable declaration:
   def var_declare(name):
     decl = copy.deepcopy(rubric.block_items[0])
@@ -106,8 +111,20 @@ def var_pass(ast, filename=""):
     var = copy.deepcopy(rubric.block_items[2])
     ast_ops.sar(var, str, lambda s: name if s == "var" else s)
     return var
-  
+  """
+
   def dbg(a):
+    a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg)
+    a.lvalue = ast_ops.sar(a.lvalue, Assignment, dbg)
+    r = copy.deepcopy(rubric)
+    ast_ops.sar_ID(r, "LVALUE", a.lvalue)
+    ast_ops.sar_ID(r, "RVALUE", a.rvalue)
+    ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,a.coord,a,type(a))))
+    ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count)) if c.value=='0' else c)
+    return FuncCall(ID(""), ExprList([Compound(r.block_items, coord=a.coord)], coord=a.coord))
+  ast_ops.sar(ast, Assignment, dbg)
+    
+"""
     if isinstance(a.lvalue, pycparser.c_ast.ID):
       ID = var_ID(a.lvalue.name, a)
       var = var_var(a.lvalue.name)
@@ -117,6 +134,7 @@ def var_pass(ast, filename=""):
       return FuncCall(pycparser.c_ast.ID(""), ExprList([cmpd]))
     return a
   ast_ops.sar(ast, Assignment, dbg)
+"""
 
 def to_c(ast):
   gen = c_generator.CGenerator()

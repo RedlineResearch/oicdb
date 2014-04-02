@@ -3,6 +3,6 @@ fn=$1
 if [ $# == 0 ]; then fn=tree.c; fi
 ./config.py
 ./pass.py c_files/$fn c_out/$fn > c_out/$fn
-gcc -std=c99 c_out/$fn -o c_out/a.out
+gcc -std=gnu99 c_out/$fn -o c_out/a.out
 rm -f c_out/debug_fifo
 mkfifo c_out/debug_fifo

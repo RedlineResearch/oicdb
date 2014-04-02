@@ -1,0 +1,22 @@
+> Need a "sizeof()" function for pycparser AST
+> Change Assignment / var_pass to use lhs and rhs to cover all assignments
+  (not just assignments with an ID on the lhs)
+> Add ParamList--Decl pass, writing out (&var) and (var) at beginning of function.
+> Add Decl pass (only inside functions), writing out (&var) and (RHS)
+> Add UnaryOp pass, writing out (&LHS) and (RHS)
+> 
+
+Future:
+> Debugging asm()?
+> Instead of pickle.dump() use struct.pack() to convert python symbol table for
+  use by an efficient trace listener written in C.
+> Data flow visualization
+> Trace analysis tools / algorithms, trace data structures / database
+  > Hash map for symbol table
+    > Linked list of trace entries / program events
+    > Adjacency list in each linked list with pointers to the set of program events
+      which affected the results of this event.
+    > Adjacency list in each linked list with pointers to the set of program events
+      which this event affected the results of.
+    > Int index for what event number this occured
+> A preprocessing tool which expands typeof() and sizeof() (exists already?)

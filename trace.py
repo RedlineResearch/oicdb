@@ -16,19 +16,27 @@ sym_table = pickle.load(open(sys.argv[1], 'r'))
 fifo = open(sys.argv[2], 'r')
 
 while True:
-  data = fifo.read(4)
+  data = fifo.read(1)
   if len(data) == 0:
     fifo.close()
     print "Re-opening fifo..."
     fifo = open(sys.argv[2], 'r')
     continue
-  ID, = struct.unpack("@i",data)
+  ID = ord(struct.unpack("@c",data)[0])
   fn,coord,var,cls = sym_table[ID]
-  if cls == pycparser.c_ast.Assignment: val = struct.unpack("@i", fifo.read(4))[0]
+  if cls == pycparser.c_ast.Assignment:
+    length = ord(struct.unpack("@c", fifo.read(1))[0])
+    #print length
+    val = hex(struct.unpack("@P", fifo.read(length))[0])+": "
+    length = ord(struct.unpack("@c", fifo.read(1))[0])
+    #print length2
+    val += str(struct.unpack('@'+'i'*(length/4), fifo.read(length))[0])
+    var = var.lvalue.name
+  
   elif cls == pycparser.c_ast.FuncDef:  val = "function"
   elif cls == pycparser.c_ast.Return:
-    length = struct.unpack("@i", fifo.read(4))[0]
+    length = ord(struct.unpack("@c", fifo.read(1))[0])
     val = struct.unpack("@i", fifo.read(length))[0]
-  print "%04d] %s:%d: %s = %s"%(ID,fn,coord.line,var,str(val))
+  print "%04d] %s:%d: (%s) %s"%(ID,fn,coord.line,var,str(val))
 
 
