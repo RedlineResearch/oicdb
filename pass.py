@@ -117,10 +117,10 @@ def var_pass(ast, filename=""):
     a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg)
     a.lvalue = ast_ops.sar(a.lvalue, Assignment, dbg)
     r = copy.deepcopy(rubric)
+    ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count)) if c.value=='0' else c)
+    ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,a.coord,a,type(a))))
     ast_ops.sar_ID(r, "LVALUE", a.lvalue)
     ast_ops.sar_ID(r, "RVALUE", a.rvalue)
-    ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,a.coord,a,type(a))))
-    ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count)) if c.value=='0' else c)
     return FuncCall(ID(""), ExprList([Compound(r.block_items, coord=a.coord)], coord=a.coord))
   ast_ops.sar(ast, Assignment, dbg)
     

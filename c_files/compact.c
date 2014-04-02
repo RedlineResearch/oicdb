@@ -6,7 +6,7 @@
 #include <string.h>
 #define MAXBUFF 65536
 
-int getline(char line[], int nmax);
+int getline2(char line[], int nmax);
 int compact1(char line[]);
 int compact2(char line[]);
 
@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
   char buffer2[MAXBUFF];
   int len;
 
-  len = getline(buffer1, MAXBUFF);
+  len = getline2(buffer1, MAXBUFF);
   printf("You entered : %s\n", buffer1);
   strcpy(buffer2,buffer1);
   printf("Which is : %s\n", buffer2);
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   printf("compact2: len=%d,  %s\n",len, buffer2);
 }
 
-int getline(char line[], int nmax)
+int getline2(char line[], int nmax)
      /* It prompts user and reads up to nmax
       * characters into line. It returns number
       * of characters read. ['\n' terminates the line]
@@ -47,7 +47,7 @@ int getline(char line[], int nmax)
 
 int compact1(char line[])
      /* It replaces streaks of spaces in line by a
-      * single space. It returns lenght of resulting string.
+      * single space. It returns length of resulting string.
       */
 {
   int cursor=0;      /* Cursor on the line */
@@ -71,7 +71,7 @@ int compact1(char line[])
 
 int compact2(char line[])
      /* It replaces streaks of spaces in line by a
-      * single space. It returns lenght of resulting string.
+      * single space. It returns length of resulting string.
       */
 {
   int cursor=0;      /* Cursor on the line */

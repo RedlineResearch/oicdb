@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
   __DEBUG_ID = sizeof(__DEBUG_RVALUE);
   write(__DEBUG_FIFO, (const void *)&__DEBUG_ID, sizeof(__DEBUG_ID));
   write(__DEBUG_FIFO, (const void *)(&__DEBUG_RVALUE), sizeof(__DEBUG_RVALUE));
-  *__DEBUG_LVALUE = RVALUE; /* Put this after writes to ensure thread safety */
+  *__DEBUG_LVALUE = __DEBUG_RVALUE; /* Put this after writes to ensure thread safety */
+  __DEBUG_RVALUE;
 }
 
