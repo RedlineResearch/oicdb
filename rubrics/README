@@ -1,0 +1,14 @@
+This directory contains C programs containing generic C statements which
+can be used when debugging a specific C expression (e.g. Assignment, FuncDecl,
+ReturnStmt, ...) containing arbitrary subexpressions. The corresponding
+pickle (pkl) files contain the parsed C programs in their generic form.
+
+For instance, a file containing:
+
+void main(int argc, char *argv[]) {
+  int *x = &VAR;
+  printf("%p\n", x);
+}
+
+might be used for the purpose of logging to stdout all pointers to integers.
+
