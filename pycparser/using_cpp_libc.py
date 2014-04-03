@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     ast = parse_file(filename, use_cpp=True,
             cpp_path=CPPPATH, 
-            cpp_args=r'-I../utils/fake_libc_include')
+            cpp_args=r'-I../fake_libc')
     
     ast.show()
 

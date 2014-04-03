@@ -1,6 +1,11 @@
 import pycparser
 from pycparser.c_ast import *
 import copy
+import ctypes
+import StringIO
+import pexpect
+import os
+
 """
 This contains useful functions for interacting with / changing
 a pycparser AST.
@@ -46,15 +51,57 @@ def fix_typeofs(ast):
     return td
   return sar(ast, TypeDecl, fix_typeof)
 
-"""
-  def fix_typeof(decl):
-    s = find_string(decl, "typeof")
-    if s:
-      def typedecl(td):
-        
-      sar(decl, TypeDecl, typedecl)
-      sar_string(decl, s, "typeof("+s[6:]+")")
-    return decl
-  return sar(ast, Decl, fix_typeof)
-"""
+csize = ctypes.sizeof
+type_sizes = {
+  "bool":   csize(ctypes.c_bool),
+  "byte":   csize(ctypes.c_byte),
+  "char":   csize(ctypes.c_char),
+  "double": csize(ctypes.c_double),
+  "float":  csize(ctypes.c_float),
+  "int":    csize(ctypes.c_int),
+  "long":   csize(ctypes.c_long),
+  "long double": csize(ctypes.c_longdouble),
+  "short":  csize(ctypes.c_short),
+  "unsigned byte": csize(ctypes.c_ubyte),
+  "unsigned int": csize(ctypes.c_uint),
+  "unsigned long": csize(ctypes.c_ulong),
+  "unsigned short": csize(ctypes.c_short),
+  "char": csize(ctypes.c_wchar),
+}
+
+def gcc_get_size(name):
+  """ Magically computes the size of a C data type """
+  proc = pexpect.spawn("gcc -o .gcc_get_size.o -xc -")
+  proc.send("#include <stdio.h>\n")
+  proc.send("void main(int argc, char *argv[]) {\n")
+  proc.send("  int x = (int)sizeof(%s);\n"%name)
+  proc.send("  printf(\"%d\", x);\n")
+  proc.send("}\n")
+  proc.sendcontrol('d')
+  #print proc.readlines()
+  size = int(pexpect.run("./.gcc_get_size.o"))
+  os.remove("./.gcc_get_size.o")
+  return size
+
+def get_size(names):
+  if len(names) == 0: raise Exception("Error gettings size of NIL type")
+  name = " ".join(names)
+  if name not in type_sizes.keys():
+    type_sizes[name] = gdb_get_size(name)
+  return type_sizes[name]
+
+def sizeof(decl):
+  """ Computes the number of bytes the given pycparser AST Decl takes up as a C data type """
+  typ = type(decl)
+  if typ in [ArrayDecl,PtrDecl]: return csize(ctypes.c_void_p)
+  # constraint violation of sizeof(), so returning 1 to conform with GCC sizeof()
+  elif typ == FuncDecl: return 1
+  elif typ == TypeDecl: return sizeof(decl.type)
+  elif typ == IdentifierType: return get_size(decl.names)
+  elif typ == Decl: return sizeof(decl.type)
+  else:
+    buf = StringIO.StringIO()
+    decl.show(buf=buf)
+    raise Exception("Unhandled Decl type in typeof():\n"+buf.getvalue())
+
 
