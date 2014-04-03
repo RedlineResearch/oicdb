@@ -93,26 +93,6 @@ def var_pass(ast, filename=""):
   rubric = var_rubric
   ast_ops.fix_typeofs(rubric)
   
-  """
-  # Create AST for variable declaration:
-  def var_declare(name):
-    decl = copy.deepcopy(rubric.block_items[0])
-    decl.init.value = str(ID_count)
-    decl.type.declname = name
-    return decl
-  # Create AST for writing the variable ID to debug FIFO
-  def var_ID(name,n):
-    ID = copy.deepcopy(rubric.block_items[1])
-    unique_ID = new_sym((filename,n.coord,n.lvalue.name,type(n)))
-    ast_ops.sar(ID, str, lambda s: unique_ID if s == "__DEBUG_ID" else s)
-    return ID
-  # Create AST for writing the variable var to debug FIFO
-  def var_var(name):
-    var = copy.deepcopy(rubric.block_items[2])
-    ast_ops.sar(var, str, lambda s: name if s == "var" else s)
-    return var
-  """
-
   def dbg(a):
     a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg)
     a.lvalue = ast_ops.sar(a.lvalue, Assignment, dbg)
@@ -124,18 +104,6 @@ def var_pass(ast, filename=""):
     return FuncCall(ID(""), ExprList([Compound(r.block_items, coord=a.coord)], coord=a.coord))
   ast_ops.sar(ast, Assignment, dbg)
     
-"""
-    if isinstance(a.lvalue, pycparser.c_ast.ID):
-      ID = var_ID(a.lvalue.name, a)
-      var = var_var(a.lvalue.name)
-      decl = var_declare("__DEBUG_"+str(ID_count))
-      a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg) # let's recurse some more
-      cmpd = Compound([decl,a,ID,var,a.lvalue], coord=a.coord)
-      return FuncCall(pycparser.c_ast.ID(""), ExprList([cmpd]))
-    return a
-  ast_ops.sar(ast, Assignment, dbg)
-"""
-
 def to_c(ast):
   gen = c_generator.CGenerator()
   return gen.visit(ast)
