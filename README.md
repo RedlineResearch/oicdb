@@ -39,5 +39,7 @@ which produces a human-readable trace of the assignments in the program.
 5.    ~~Make a trace listener (read in a pickle file with symbol table / dict
       and convert binary trace to human-readable format).~~
 6.    Make a trace listener which handles data types other than int.
-7.    Figure out why trace of function calls is not working.
+7.    ~~Figure out why trace of function calls is not working.~~
+8.    Label function entrances / exits as such so that trace listener can
+      tell the programmer the difference.
 
