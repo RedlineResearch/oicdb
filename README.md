@@ -35,7 +35,7 @@ which produces a human-readable trace of the assignments in the program.
 1.    ~~Finish "entering" and "exiting" function trace information.~~
 2.    Handle "#include" / "typedef" lines more robustly.
 3.    Handle Compound statements without using a fake FuncCall.
-4.    Save symbol table to file for use by trace listener.
+4.    ~~Save symbol table to file for use by trace listener.~~
 5.    ~~Make a trace listener (read in a pickle file with symbol table / dict
       and convert binary trace to human-readable format).~~
 6.    Make a trace listener which handles data types other than int.
