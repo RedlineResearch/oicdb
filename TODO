@@ -1,11 +1,11 @@
-> Need a "sizeof()" function for pycparser AST - use ctypes.sizeof() with a dictionary / function
-  mapping from pycparser.c_ast.Decl to ctypes.c_*
-  > bool, byte, char, char_p, double, float, int, long, longdouble, short, ubyte,
-    uint, ulong, ushort, void_p, wchar, wchar_p
-  > missing any types?
+> ~~Need a "sizeof()" function for pycparser AST - use ctypes.sizeof() with a dictionary / function
+  mapping from pycparser.c_ast.Decl to ctypes.c_*~~
+  > ~~bool, byte, char, char_p, double, float, int, long, longdouble, short, ubyte,
+    uint, ulong, ushort, void_p, wchar, wchar_p~~
+  > ~~missing any types?~~
 > ~~Change Assignment / var_pass to use lhs and rhs to cover all assignments
   (not just assignments with an ID on the lhs)~~
-> Add ParamList--Decl pass, writing out (&var) and (var) at beginning of function.
+> ~~Add ParamList--Decl pass, writing out (&var) and (var) at beginning of function.~~
 > Add Decl pass (only inside functions), writing out (&var) and (RHS)
 > Add UnaryOp pass, writing out (&LHS) and (RHS)
 > 

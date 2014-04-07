@@ -97,13 +97,33 @@ def var_pass(ast, filename=""):
     a.rvalue = ast_ops.sar(a.rvalue, Assignment, dbg)
     a.lvalue = ast_ops.sar(a.lvalue, Assignment, dbg)
     r = copy.deepcopy(rubric)
-    ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count)) if c.value=='0' else c)
+    ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count+1)) if c.value=='0' else c)
     ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,a.coord,a,type(a))))
     ast_ops.sar_ID(r, "LVALUE", a.lvalue)
     ast_ops.sar_ID(r, "RVALUE", a.rvalue)
     return FuncCall(ID(""), ExprList([Compound(r.block_items, coord=a.coord)], coord=a.coord))
   ast_ops.sar(ast, Assignment, dbg)
-    
+
+param_rubric = pickle.loads(open("rubrics/param.pkl", 'r').read())
+def param_pass(ast, filename=""):
+  """ Insert parameter declaration logging expressions """
+  rubric = param_rubric
+  ast_ops.fix_typeofs(rubric)
+
+  def dbg(f):
+    #print f.__dict__
+    args = [d.name for d in f.decl.type.args.params]
+    for arg in args[::-1]:
+      r = copy.deepcopy(rubric)
+      ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count+1)) if c.value=='0' else c)
+      ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,f.coord,arg,type(f.decl.type.args))))
+      ast_ops.sar_string(r, "LVALUE", arg)
+      ast_ops.sar_string(r, "RVALUE", arg)
+      f.body.block_items.insert(0,r)
+    return f
+
+  ast_ops.sar(ast, FuncDef, dbg)
+
 def to_c(ast):
   gen = c_generator.CGenerator()
   return gen.visit(ast)
@@ -120,6 +140,7 @@ if __name__ == '__main__':
 
   ast = get_ast(fn)
   var_pass(ast, filename=fn) # do VAR pass first (don't want to VAR the setup...)
+  param_pass(ast, fn) # parameter decl pass
   fncn_pass(ast, filename=fn) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
   return_pass(ast, filename=fn) # return pass 3rd?
   setup_pass(ast) # do SETUP pass last

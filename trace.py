@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import pycparser
+from pycparser.c_ast import *
 import sys
 import struct
 import pickle
@@ -24,19 +25,25 @@ while True:
     continue
   ID = ord(struct.unpack("@c",data)[0])
   fn,coord,var,cls = sym_table[ID]
-  if cls == pycparser.c_ast.Assignment:
+  if cls in [Assignment, ParamList]:
     length = ord(struct.unpack("@c", fifo.read(1))[0])
     #print length
     val = hex(struct.unpack("@P", fifo.read(length))[0])+": "
     length = ord(struct.unpack("@c", fifo.read(1))[0])
-    #print length2
+    #print length
     val += str(struct.unpack('@'+'i'*(length/4), fifo.read(length))[0])
-    var = var.lvalue.name
+    if cls == Assignment: var = var.lvalue.name
   
   elif cls == pycparser.c_ast.FuncDef:  val = "function"
   elif cls == pycparser.c_ast.Return:
     length = ord(struct.unpack("@c", fifo.read(1))[0])
+    #print length
+    #print coord
     val = struct.unpack("@i", fifo.read(length))[0]
+  else:
+    
+    val = None
+    print "Unhandled type: "+str(cls)
   print "%04d] %s:%d: (%s) %s"%(ID,fn,coord.line,var,str(val))
 
 
