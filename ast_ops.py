@@ -5,6 +5,7 @@ import ctypes
 import StringIO
 import pexpect
 import os
+from time import sleep
 
 """
 This contains useful functions for interacting with / changing
@@ -79,6 +80,7 @@ def gcc_get_size(name):
   proc.send("}\n")
   proc.sendcontrol('d')
   #print proc.readlines()
+  sleep(0.05)
   size = int(pexpect.run("./.gcc_get_size.o"))
   os.remove("./.gcc_get_size.o")
   return size
@@ -87,7 +89,7 @@ def get_size(names):
   if len(names) == 0: raise Exception("Error gettings size of NIL type")
   name = " ".join(names)
   if name not in type_sizes.keys():
-    type_sizes[name] = gdb_get_size(name)
+    type_sizes[name] = gcc_get_size(name)
   return type_sizes[name]
 
 def sizeof(decl):
