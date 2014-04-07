@@ -6,7 +6,7 @@ oicdb
 Run:
 
 ```
-$ ./runpass [tree.c | fact.c]
+$  ./runpass [tree.c | fact.c]
 ```
 
 which runs pass.py on c_files/tree.c saving the output to c_out/tree.c,
