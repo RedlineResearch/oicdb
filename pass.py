@@ -16,7 +16,7 @@ def get_ast(fn, cpp_path='cpp'):
                     cpp_args=r'-Ifake_libc')
 
 setup_rubric = pickle.loads(open("rubrics/setup.pkl", 'r').read())
-def setup_pass(ast):
+def setup_pass(ast, filename=""):
   """ Insert setup expressions into main() as necessary """
   rubric = setup_rubric
   #print ast.ext
@@ -101,6 +101,8 @@ def var_pass(ast, filename=""):
     ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,a.coord,a,type(a))))
     ast_ops.sar_ID(r, "LVALUE", a.lvalue)
     ast_ops.sar_ID(r, "RVALUE", a.rvalue)
+    #print "OPERATION: "+a.op
+    r.block_items[-2].op = a.op # makes the operation (=, +=, -=) correct - TODO: magic number...
     return FuncCall(ID(""), ExprList([Compound(r.block_items, coord=a.coord)], coord=a.coord))
   ast_ops.sar(ast, Assignment, dbg)
 
@@ -124,6 +126,32 @@ def param_pass(ast, filename=""):
 
   ast_ops.sar(ast, FuncDef, dbg)
 
+def decl_pass(ast, filename=""):
+  rubric = var_rubric
+  
+  def dbg(d):
+    if not d.__dict__.has_key("init"): return None # not the kind of Decl we're looking for
+    if d.name.startswith("__DEBUG_"): return None # skip VAR pass variables
+    d.init = ast_ops.sar(d.init, Decl, dbg)
+    r = copy.deepcopy(rubric)
+    ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count+1)) if c.value=='0' else c)
+    ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,d.coord,d,type(d))))
+    ast_ops.sar_string(r, "LVALUE", d.name)
+    if d.init: ast_ops.sar_ID(r, "RVALUE", d.init)
+    # No initial value, so RVALUE = *LVALUE implicitly (garbage value, but useful for debugging):
+    else: ast_ops.sar_string(r, "RVALUE", d.name)
+    return FuncCall(ID(""), ExprList([Compound(r.block_items, coord=d.coord)], coord=d.coord))
+  def dbg_c(c):
+    for i in range(len(c.block_items))[::-1]:
+      bi = c.block_items[i]
+      if isinstance(bi, Decl):
+        ret = dbg(bi)
+        if ret != None: c.block_items.insert(i+1,ret)
+    c.block_items = map(lambda bi: ast_ops.sar(bi, Compound, dbg_c), c.block_items)
+    return c
+  ast_ops.sar(ast, Compound, dbg_c)
+
+
 def to_c(ast):
   gen = c_generator.CGenerator()
   return gen.visit(ast)
@@ -139,11 +167,12 @@ if __name__ == '__main__':
   if len(sys.argv) > 2: sym_table_fn = sys.argv[2] + ".sym.pkl"
 
   ast = get_ast(fn)
-  var_pass(ast, filename=fn) # do VAR pass first (don't want to VAR the setup...)
-  param_pass(ast, fn) # parameter decl pass
-  fncn_pass(ast, filename=fn) # do FNCN pass 2nd (entering main() goes after SETUP expressions)
-  return_pass(ast, filename=fn) # return pass 3rd?
-  setup_pass(ast) # do SETUP pass last
+
+  # Do VAR pass first (don't want to VAR the setup)
+  passes = [var_pass, decl_pass, param_pass, fncn_pass, return_pass, setup_pass]
+  #passes = [var_pass, param_pass, fncn_pass, return_pass, setup_pass]
+  map(lambda ps: ps(ast, filename=fn), passes)
+
   # TODO: get rid of this hacky line:
   print (subprocess.check_output("cat %s | egrep '^#include'"%(sys.argv[1],), shell=True)).rstrip()
   print "#include <unistd.h>"
