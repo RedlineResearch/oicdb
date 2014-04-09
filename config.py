@@ -20,4 +20,5 @@ pickle.dump(grab_main("rubrics/fncn.c"), open("rubrics/fncn.pkl", 'w'))
 pickle.dump(grab_main("rubrics/var.c"), open("rubrics/var.pkl", 'w'))
 pickle.dump(grab_main("rubrics/return.c"), open("rubrics/return.pkl", 'w'))
 pickle.dump(grab_main("rubrics/param.c"), open("rubrics/param.pkl", 'w'))
+pickle.dump(grab_main("rubrics/unary.c"), open("rubrics/unary.pkl", 'w'))
 

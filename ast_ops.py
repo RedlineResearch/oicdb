@@ -68,6 +68,7 @@ type_sizes = {
   "unsigned long": csize(ctypes.c_ulong),
   "unsigned short": csize(ctypes.c_short),
   "char": csize(ctypes.c_wchar),
+  "void *": csize(ctypes.c_void_p),
 }
 
 def gcc_get_size(name):
@@ -101,9 +102,9 @@ def sizeof(decl):
   elif typ == TypeDecl: return sizeof(decl.type)
   elif typ == IdentifierType: return get_size(decl.names)
   elif typ == Decl: return sizeof(decl.type)
+  elif typ == str: return get_size([decl])
   else:
     buf = StringIO.StringIO()
     decl.show(buf=buf)
     raise Exception("Unhandled Decl type in typeof():\n"+buf.getvalue())
-
 

@@ -151,6 +151,26 @@ def decl_pass(ast, filename=""):
     return c
   ast_ops.sar(ast, Compound, dbg_c)
 
+unary_rubric = pickle.loads(open("rubrics/unary.pkl", 'r').read())
+def unary_pass(ast, filename=""):
+  rubric = unary_rubric
+  ast_ops.fix_typeofs(rubric)
+
+  def dbg(u):
+    #print u.op
+    if not ("++" in u.op or "--" in u.op): return u
+    r = copy.deepcopy(rubric)
+    def fix_op(ur):
+      if "++" in ur.op or "--" in ur.op: ur.op = u.op
+      return ur
+    ast_ops.sar(r, UnaryOp, fix_op)
+    ast_ops.sar(r, Constant, lambda c: Constant('int',str(ID_count+1)) if c.value=='0' else c)
+    ast_ops.sar_string(r, "__DEBUG_ID", new_sym((filename,u.coord,u,type(u))))
+    #print u.expr.__dict__
+    ast_ops.sar_ID(r, "LVALUE", u.expr)
+    return FuncCall(ID(""), ExprList([Compound(r.block_items, coord=u.coord)], coord=u.coord))
+
+  ast_ops.sar(ast, UnaryOp, dbg)
 
 def to_c(ast):
   gen = c_generator.CGenerator()
@@ -169,7 +189,7 @@ if __name__ == '__main__':
   ast = get_ast(fn)
 
   # Do VAR pass first (don't want to VAR the setup)
-  passes = [var_pass, decl_pass, param_pass, fncn_pass, return_pass, setup_pass]
+  passes = [var_pass, unary_pass, decl_pass, param_pass, fncn_pass, return_pass, setup_pass]
   #passes = [var_pass, param_pass, fncn_pass, return_pass, setup_pass]
   map(lambda ps: ps(ast, filename=fn), passes)
 

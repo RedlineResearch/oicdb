@@ -4,6 +4,7 @@ from pycparser.c_ast import *
 import sys
 import struct
 import pickle
+import ast_ops
 
 """ A proof-of-concept trace listener for C programs.
 This needs to be a lot more efficient (i.e. written in C)
@@ -25,7 +26,7 @@ while True:
     continue
   ID = ord(struct.unpack("@c",data)[0])
   fn,coord,var,cls = sym_table[ID]
-  if cls in [Assignment, ParamList]:
+  if cls in [Assignment, ParamList, Decl]:
     length = ord(struct.unpack("@c", fifo.read(1))[0])
     #print length
     val = hex(struct.unpack("@P", fifo.read(length))[0])+": "
@@ -33,13 +34,16 @@ while True:
     #print length
     val += str(struct.unpack('@'+'i'*(length/4), fifo.read(length))[0])
     if cls == Assignment: var = var.lvalue.name
-  
+    elif cls == Decl: var = var.name
   elif cls == pycparser.c_ast.FuncDef:  val = "function"
   elif cls == pycparser.c_ast.Return:
     length = ord(struct.unpack("@c", fifo.read(1))[0])
     #print length
     #print coord
     val = struct.unpack("@i", fifo.read(length))[0]
+  elif cls == UnaryOp:
+    length = ast_ops.sizeof("void *")
+    val = hex(struct.unpack("@P", fifo.read(length))[0])
   else:
     
     val = None
