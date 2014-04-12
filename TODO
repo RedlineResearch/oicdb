@@ -16,12 +16,11 @@
 > Figure out what to do with += and -= (calculate new values from within trace listener?)
 > Re-use code between passes (e.g. SARing the __DEBUG_ID which happens in all passes)
 
-
 Future:
 > Debugging asm()?
 > Instead of pickle.dump() use struct.pack() to convert python symbol table for
   use by an efficient trace listener written in C.
-> Data flow visualization
+> Data flow visualization (graph data structure)
 > Trace analysis tools / algorithms, trace data structures / database
   > Hash map for symbol table
     > Linked list of trace entries / program events
