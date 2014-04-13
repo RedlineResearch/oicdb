@@ -6,30 +6,29 @@ oicdb
 Run:
 
 ```
-$  ./runpass [tree.c | fact.c]
+$  ./runpass [?.c]
 ```
 
-which runs pass.py on c_files/tree.c saving the output to c_out/tree.c,
-compiles c_out/tree.c, and creates a new debugging fifo queue named
-c_out/debug_fifo.
+which runs pass.py on c_files/?.c saving the output to c_out/?.c,
+compiles c_out/?.c, stores the symbol table and corresponding
+AST entries to c_out/?.c.sym and recreates the debugging fifo
+queue at c_out/debug_fifo.
 
 You can then in separate terminals run:
 
 ```
 $ cd c_out
-$ ../trace.py tree.c.sym.pkl debug_fifo # OR the following:
-$ ../trace.py fact.c.sym.pkl debug_fifo
+$ ../trace.py ?.c.sym.pkl debug_fifo
 ```
 
 and
 
 ```
 $ cd c_out
-$ ./tree debug_fifo
+$ ./a.out debug_fifo
 ```
 
 which produces a human-readable trace of the assignments in the program.
-
 
 ### TODO:
 1.    ~~Finish "entering" and "exiting" function trace information.~~
