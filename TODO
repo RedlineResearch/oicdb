@@ -8,8 +8,8 @@
 > ~~Add ParamList--Decl pass, writing out (&var) and (var) at beginning of function.~~
 > ~~Add Decl pass (only inside functions), writing out (&var) and (RHS)~~
 > ~~Add UnaryOp pass, writing out (&LHS) and (RHS)~~
-> Trace listener should never call fifo.read() on a literal constant - use ast_ops.sizeof()
-  to determine how much data to read.
+> ~~Trace listener should never call fifo.read() on a literal constant - use ast_ops.sizeof()
+  to determine how much data to read.~~
 > Trace listener should maintain a dictionary mapping from symbol table ID to a function to
   call when the beginning of the FIFO contains data corresponding to this ID (i.e. we just
   read the ID from the FIFO) - cleaner than a chain of if-elif-elif...

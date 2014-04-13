@@ -67,7 +67,7 @@ type_sizes = {
   "unsigned int": csize(ctypes.c_uint),
   "unsigned long": csize(ctypes.c_ulong),
   "unsigned short": csize(ctypes.c_short),
-  "char": csize(ctypes.c_wchar),
+  #"char": csize(ctypes.c_wchar),
   "void *": csize(ctypes.c_void_p),
 }
 
