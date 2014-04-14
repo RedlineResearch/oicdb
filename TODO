@@ -30,4 +30,4 @@ Future:
       which this event affected the results of.
     > Int index for what event number this occured
 > A preprocessing tool which expands typeof() and sizeof() (exists already?)
-
+  > i.e. make use of typeof in rubrics less hacky (typeof(VARNAME) instead of typeofVARNAME)
