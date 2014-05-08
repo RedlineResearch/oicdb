@@ -17,9 +17,26 @@ if len(sys.argv) != 3:
 IDSZ = ast_ops.sizeof("char")
 PTRSZ = ast_ops.sizeof("void *")
 INTSZ = ast_ops.sizeof("int")
-print IDSZ,PTRSZ,INTSZ
+#print IDSZ,PTRSZ,INTSZ
 
 sym_table = pickle.load(open(sys.argv[1], 'r'))
+
+while True:
+  ui = raw_input("oicdb) ").split(' ')
+  if ui[0] == '': break
+  if ui[0] == "watch":
+    if len(ui) == 1:
+      print "'watch' takes at least 1 argument."
+      continue
+    watch_vars = ui[1:]
+    break
+  else:
+    print "Invalid command'",ui[0],"'"
+
+def print_entry(ID,fn,line,var,val):
+  if (len(watch_vars) == 0) or (var in watch_vars):
+    print "%04d] %s:%d: (%s) %s"%(ID,fn,line,var,val)
+
 fifo = open(sys.argv[2], 'r')
 
 while True:
@@ -52,6 +69,7 @@ while True:
     
     val = None
     print "Unhandled type: "+str(cls)
-  print "%04d] %s:%d: (%s) %s"%(ID,fn,coord.line,var,str(val))
+  
+  print_entry(ID,fn,coord.line,var,str(val))
 
 
