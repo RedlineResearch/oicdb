@@ -21,6 +21,7 @@ INTSZ = ast_ops.sizeof("int")
 
 sym_table = pickle.load(open(sys.argv[1], 'r'))
 
+watch_vars = []
 while True:
   ui = raw_input("oicdb) ").split(' ')
   if ui[0] == '': break
@@ -57,13 +58,14 @@ while True:
     val += str(struct.unpack('@'+'i'*(length/INTSZ), fifo.read(length))[0])
     if cls == Assignment: var = var.lvalue.name
     elif cls == Decl: var = var.name
-  elif cls == pycparser.c_ast.FuncDef:  val = "function"
+  elif cls == pycparser.c_ast.FuncDef:  val = "entering fncn"
   elif cls == pycparser.c_ast.Return:
     length = ord(struct.unpack("@c", fifo.read(IDSZ))[0])
     #print length
     #print coord
     val = struct.unpack('@'+'i'*(length/INTSZ), fifo.read(length))[0]
   elif cls == UnaryOp:
+    var = var.expr.name + var.op[-2:]
     val = hex(struct.unpack("@P", fifo.read(PTRSZ))[0])
   else:
     
